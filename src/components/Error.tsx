@@ -42,15 +42,15 @@ export const Error: React.FC<ErrorProps> = ({ onReset }) => {
           <ErrorIcon />
         </div>
         <h1 className="t" style={{ fontSize: '28px', marginTop: '18px' }}>Compression failed</h1>
-        <p className="d">Something went wrong while processing this video. Try again, or choose a different file or setting.</p>
+        <p className="d">An error occurred during compression.</p>
       </div>
       <div className="c">
         <div className="k" style={{ marginBottom: '12px' }}>Input file</div>
         <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
           <div className="f f-small" style={{ width: '48px', height: '48px' }}><FileIcon /></div>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div className="nm" style={{ fontSize: '16px' }}>video.mp4</div>
-            <div className="m error-text" style={{ fontSize: '12px', marginTop: '4px' }}>Stopped at 42%</div>
+            <div className="nm" style={{ fontSize: '16px' }}>your video</div>
+            <div className="m error-text" style={{ fontSize: '12px', marginTop: '4px' }}>processing failed</div>
           </div>
         </div>
       </div>
