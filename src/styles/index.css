@@ -252,53 +252,6 @@ body {
   outline-offset: 2px;
 }
 
-.wasm-warning {
-  position: relative;
-  display: flex;
-  align-items: flex-start;
-  padding: 14px;
-  border: 1px solid #A87932;
-  background: #302612;
-  color: #F4D59A;
-  font-size: 13px;
-  line-height: 1.45;
-}
-
-.wasm-warning-close {
-  position: absolute;
-  top: 5px;
-  left: 5px;
-  width: 24px;
-  height: 24px;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: #F4D59A;
-  font: 400 20px/1 var(--sans);
-  cursor: pointer;
-}
-
-.wasm-warning-close:hover {
-  color: #FFFFFF;
-}
-
-.wasm-warning-close:focus-visible {
-  outline: 2px solid #FFD27A;
-  outline-offset: 1px;
-}
-
-.wasm-warning-content {
-  display: flex;
-  gap: 10px;
-  padding-left: 24px;
-}
-
-.wasm-warning-content strong {
-  flex: none;
-  color: #FFD27A;
-  font-size: 12px;
-  letter-spacing: 0.08em;
-}
 
 .n {
   height: 84px;

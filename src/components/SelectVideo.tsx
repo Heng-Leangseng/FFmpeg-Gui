@@ -1,4 +1,4 @@
-import { useRef, useState, DragEvent, ChangeEvent } from 'react';
+import { useRef, DragEvent, ChangeEvent } from 'react';
 
 interface SelectVideoProps {
   onFileSelect: (file: File) => void;
@@ -10,8 +10,6 @@ const LogoIcon = () => (
   </svg>
 );
 
-
-
 const FileDropIcon = () => (
   <svg width="36" height="36" viewBox="0 0 24 24">
     <rect x="3" y="4" width="18" height="16" />
@@ -22,7 +20,6 @@ const FileDropIcon = () => (
 export const SelectVideo: React.FC<SelectVideoProps> = ({ onFileSelect }) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const dropZoneRef = useRef<HTMLButtonElement>(null);
-  const [showWarning, setShowWarning] = useState(true);
 
   const handleFile = (file: File) => {
     if (file.type.startsWith('video/')) {
@@ -38,9 +35,6 @@ export const SelectVideo: React.FC<SelectVideoProps> = ({ onFileSelect }) => {
 
   const handleDragOver = (e: DragEvent) => {
     e.preventDefault();
-  };
-
-  const handleDragLeave = () => {
   };
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -70,7 +64,6 @@ export const SelectVideo: React.FC<SelectVideoProps> = ({ onFileSelect }) => {
         ref={dropZoneRef}
         className="z"
         onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         onClick={() => inputRef.current?.click()}
         onKeyDown={handleKeyDown}
@@ -84,23 +77,6 @@ export const SelectVideo: React.FC<SelectVideoProps> = ({ onFileSelect }) => {
         <span style={{ fontSize: '22px', fontWeight: 700 }}>Choose a video</span>
         <span style={{ background: '#2A628F', color: '#fff', padding: '12px 22px', fontSize: '15px', fontWeight: 600, borderRadius: '0' }}>Browse files</span>
       </button>
-
-      {showWarning && (
-        <aside className="wasm-warning" aria-label="FFmpeg download notice">
-          <button
-            className="wasm-warning-close"
-            type="button"
-            onClick={() => setShowWarning(false)}
-            aria-label="Close warning"
-          >
-            ×
-          </button>
-          <div className="wasm-warning-content">
-            <strong>WARNING</strong>
-            <span>If compression hangs at 0%, don't worry. Your browser is downloading FFmpeg WebAssembly, which may take a moment the first time.</span>
-          </div>
-        </aside>
-      )}
 
       <input
         ref={inputRef}

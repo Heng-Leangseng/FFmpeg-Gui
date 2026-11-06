@@ -6,6 +6,15 @@
     <title>FFmpeg-Gui</title>
   </head>
   <body>
+    <div id="ffmpeg-preloader" style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#13293D;color:#F2F6FA;font:600 16px system-ui,-apple-system,sans-serif;z-index:9999;">
+      <div style="display:flex;flex-direction:column;gap:10px;align-items:center;min-width:220px;">
+        <div style="font-size:14px;color:#8CC3EA;letter-spacing:.02em;">Loading FFmpeg...</div>
+        <div style="width:220px;height:4px;background:#18435A;overflow:hidden;position:relative;">
+          <div style="position:absolute;top:0;left:0;height:100%;width:40%;background:#3E92CC;animation:ffmpeg-preload-slide 1.4s ease-in-out infinite;"></div>
+        </div>
+      </div>
+    </div>
+    <style>@keyframes ffmpeg-preload-slide{0%{left:-40%}100%{left:100%}}</style>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
