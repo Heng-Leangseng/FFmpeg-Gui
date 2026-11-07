@@ -24,7 +24,7 @@ export class FFmpegEngine {
       this.ffmpeg.on('log', this.logHandler);
     }
 
-    const baseURL = '/FFmpeg-Gui/ffmpeg-core/';
+    const baseURL = `${import.meta.env.BASE_URL}ffmpeg-core/`;
 
     try {
       const coreURL = await toBlobURL(`${baseURL}ffmpeg-core.js`, 'text/javascript');
