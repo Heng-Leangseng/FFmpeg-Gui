@@ -1,4 +1,5 @@
 ﻿import React, { useEffect, useState } from 'react';
+import { formatFileName } from '../utils/formatFileName';
 
 interface SettingsProps {
   file: File;
@@ -81,7 +82,7 @@ export const Settings: React.FC<SettingsProps> = ({ file, onNext, onBack }) => {
         <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
           <div className="f"><FileIcon /></div>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div className="nm">{file.name}</div>
+            <div className="nm" title={file.name}>{formatFileName(file.name)}</div>
             <div className="m" style={{ fontSize: '13px', color: '#B4C8D9', marginTop: '4px' }}>
               {metadata.width && metadata.height ? `${metadata.width}×${metadata.height}` : 'Ready to compress'}
             </div>

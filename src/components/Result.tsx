@@ -1,4 +1,5 @@
 import React from 'react';
+import { formatFileName } from '../utils/formatFileName';
 
 interface ResultProps {
   inputFile: File;
@@ -104,7 +105,7 @@ export const Result: React.FC<ResultProps> = ({ inputFile, outputData, onReset }
       <div className="c" style={{ display: 'flex', gap: '14px', alignItems: 'center', padding: '12px' }}>
         <div className="f f-small" style={{ width: '48px', height: '48px' }}><FileIcon /></div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div className="nm" style={{ fontSize: '16px' }}>{inputFile.name}</div>
+          <div className="nm" style={{ fontSize: '16px' }} title={inputFile.name}>{formatFileName(inputFile.name)}</div>
           <div className="m" style={{ fontSize: '12px', color: '#B4C8D9', marginTop: '4px' }}>{formatSize(outputSize)} · MP4</div>
         </div>
       </div>

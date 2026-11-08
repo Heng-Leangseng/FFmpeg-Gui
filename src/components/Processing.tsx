@@ -1,4 +1,5 @@
 import React from 'react';
+import { formatFileName } from '../utils/formatFileName';
 
 interface ProcessingProps {
   progress: number;
@@ -47,7 +48,7 @@ export const Processing: React.FC<ProcessingProps> = ({ progress, onCancel, file
       <div className="c" style={{ display: 'flex', gap: '14px', alignItems: 'center', padding: '12px' }}>
         <div className="f f-small" style={{ width: '48px', height: '48px' }}><FileIcon /></div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div className="nm" style={{ fontSize: '16px' }}>{file?.name || 'video.mp4'}</div>
+          <div className="nm" style={{ fontSize: '16px' }} title={file?.name}>{formatFileName(file?.name || 'video.mp4')}</div>
           <div className="m" style={{ fontSize: '12px', color: '#B4C8D9', marginTop: '4px' }}>
             {file ? `${formatSize(file.size)}${metadata?.width && metadata?.height ? ` · ${metadata.width}×${metadata.height}` : ''}` : '248.6 MB · 1920×1080'}
           </div>
