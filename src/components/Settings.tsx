@@ -1,5 +1,6 @@
 ﻿import React, { useEffect, useState } from 'react';
 import { formatFileName } from '../utils/formatFileName';
+import { formatSize } from '../utils/formatSize';
 
 interface SettingsProps {
   file: File;
@@ -18,12 +19,6 @@ const FileIcon = () => (
     <path d="M8 5l11 7-11 7z" />
   </svg>
 );
-
-const formatSize = (bytes: number) => {
-  if (bytes < 1024) return bytes + ' B';
-  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' MB';
-  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
-};
 
 const formatDuration = (seconds?: number) => {
   if (!seconds) return '00:00';

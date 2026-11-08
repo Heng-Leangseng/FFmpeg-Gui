@@ -1,5 +1,6 @@
 import React from 'react';
 import { formatFileName } from '../utils/formatFileName';
+import { formatSize } from '../utils/formatSize';
 
 interface ResultProps {
   inputFile: File;
@@ -36,12 +37,6 @@ const FileIcon = () => (
     <path d="M8 5l11 7-11 7z" />
   </svg>
 );
-
-const formatSize = (bytes: number) => {
-  if (bytes < 1024) return bytes + ' B';
-  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' MB';
-  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
-};
 
 export const Result: React.FC<ResultProps> = ({ inputFile, outputData, onReset }) => {
   const outputBlob = new Blob([outputData.buffer as ArrayBuffer], { type: 'video/mp4' });

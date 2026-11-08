@@ -1,5 +1,6 @@
 import React from 'react';
 import { formatFileName } from '../utils/formatFileName';
+import { formatSize } from '../utils/formatSize';
 
 interface ProcessingProps {
   progress: number;
@@ -25,13 +26,6 @@ const CrossIcon = () => (
     <path d="M6 6l12 12M18 6L6 18" />
   </svg>
 );
-
-const formatSize = (bytes?: number) => {
-  if (!bytes) return '';
-  if (bytes < 1024) return bytes + ' B';
-  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' MB';
-  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
-};
 
 export const Processing: React.FC<ProcessingProps> = ({ progress, onCancel, file, metadata }) => {
   const clamped = Math.min(1, Math.max(0, progress));
