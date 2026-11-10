@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { formatFileName } from '../utils/formatFileName';
 import { formatSize } from '../utils/formatSize';
 
@@ -38,22 +38,60 @@ const FileIcon = () => (
   </svg>
 );
 
+const isIOS =
+  typeof navigator !== 'undefined' &&
+  (/iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1));
+
+const canSaveViaShare = (() => {
+  if (!isIOS || !navigator.canShare) return false;
+  try {
+    return navigator.canShare({ files: [new File([], 'video.mp4', { type: 'video/mp4' })] });
+  } catch {
+    return false;
+  }
+})();
+
 export const Result: React.FC<ResultProps> = ({ inputFile, outputData, onReset }) => {
-  const outputBlob = new Blob([outputData.buffer as ArrayBuffer], { type: 'video/mp4' });
-  const outputUrl = URL.createObjectURL(outputBlob);
+  const outputBlob = useMemo(() => {
+    const bytes = new Uint8Array(outputData.byteLength);
+    bytes.set(outputData);
+    return new Blob([bytes.buffer], { type: 'video/mp4' });
+  }, [outputData]);
+  const [previewUrl, setPreviewUrl] = useState('');
   const outputSize = outputData.byteLength;
   const inputSize = inputFile.size;
   const saved = inputSize - outputSize;
   const savedPercent = inputSize > 0 ? ((saved / inputSize) * 100).toFixed(1) : '0';
   const outputPercent = inputSize > 0 ? ((outputSize / inputSize) * 100).toFixed(1) : '0';
+  const downloadName = `compressed_${inputFile.name.replace(/\.[^/.]+$/, '')}.mp4`;
 
-  const handleDownload = () => {
+  useEffect(() => {
+    const url = URL.createObjectURL(outputBlob);
+    setPreviewUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [outputBlob]);
+
+  const handleDownload = async () => {
+    const file = new File([outputBlob], downloadName, { type: 'video/mp4' });
+    if (canSaveViaShare) {
+      try {
+        await navigator.share({ files: [file], title: downloadName });
+        return;
+      } catch (err) {
+        if (err instanceof DOMException && err.name === 'AbortError') return;
+      }
+    }
+    const url = previewUrl || URL.createObjectURL(outputBlob);
     const a = document.createElement('a');
-    a.href = outputUrl;
-    a.download = `compressed_${inputFile.name.replace(/\.[^/.]+$/, '')}.mp4`;
+    a.href = url;
+    a.download = downloadName;
     document.body.appendChild(a);
     a.click();
-    document.body.removeChild(a);
+    setTimeout(() => {
+      a.remove();
+      if (url !== previewUrl) URL.revokeObjectURL(url);
+    }, 60_000);
   };
 
   return (
@@ -104,11 +142,16 @@ export const Result: React.FC<ResultProps> = ({ inputFile, outputData, onReset }
           <div className="m" style={{ fontSize: '12px', color: '#B4C8D9', marginTop: '4px' }}>{formatSize(outputSize)} · MP4</div>
         </div>
       </div>
-      <video className="video-preview" src={outputUrl} controls playsInline />
+      <video className="video-preview" src={previewUrl} controls playsInline />
       <div style={{ flex: 1 }}></div>
-      <button className="b" onClick={handleDownload} style={{ marginBottom: '8px' }}>
+      <button className="b" onClick={handleDownload} style={{ marginBottom: canSaveViaShare ? '4px' : '8px' }}>
         <DownloadIcon />Download
       </button>
+      {canSaveViaShare && (
+        <div className="d" style={{ fontSize: '12px', textAlign: 'center', marginBottom: '8px' }}>
+          Choose “Save to Files” in the share sheet.
+        </div>
+      )}
       <button className="b g" onClick={onReset}>
         <RotateCcwIcon />Compress another video
       </button>
