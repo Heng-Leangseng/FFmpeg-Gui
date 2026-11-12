@@ -107,7 +107,7 @@ export const ToolSidebar: React.FC<ToolSidebarProps> = ({ isOpen, onClose, onSel
 
   const handleOpClick = (op: ToolOperation & { category: string; subcategory: string }) => {
     if (isEncoding) {
-      alert('A compression job is running. Cancel it first or wait for it to finish.');
+      alert('A job is running. Cancel it first or wait for it to finish.');
       return;
     }
     onSelectOperation(op);

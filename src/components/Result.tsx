@@ -1,12 +1,13 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { formatFileName } from '../utils/formatFileName';
 import { formatSize } from '../utils/formatSize';
+import type { Operation } from '../types';
 
 interface ResultProps {
   inputFile: File;
   outputData: Uint8Array;
   onReset: () => void;
-  mode?: 'compress' | 'speed';
+  mode?: Operation;
   speedFactor?: number;
 }
 

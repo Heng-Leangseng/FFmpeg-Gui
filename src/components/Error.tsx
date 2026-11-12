@@ -1,7 +1,9 @@
 import React from 'react';
+import type { Operation } from '../types';
 
 interface ErrorProps {
   onReset: () => void;
+  mode?: Operation;
 }
 
 const LogoIcon = () => (
@@ -28,7 +30,7 @@ const FileIcon = () => (
   </svg>
 );
 
-export const Error: React.FC<ErrorProps> = ({ onReset }) => {
+export const Error: React.FC<ErrorProps> = ({ onReset, mode = 'compress' }) => {
   return (
     <div className="s">
       <div className="h">
@@ -41,8 +43,12 @@ export const Error: React.FC<ErrorProps> = ({ onReset }) => {
         <div style={{ width: '56px', height: '56px', background: '#F2877A', color: '#0A1622', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none', borderRadius: '0' }}>
           <ErrorIcon />
         </div>
-        <h1 className="t" style={{ fontSize: '28px', marginTop: '18px' }}>Compression failed</h1>
-        <p className="d">An error occurred during compression.</p>
+        <h1 className="t" style={{ fontSize: '28px', marginTop: '18px' }}>
+          {mode === 'speed' ? 'Speed change failed' : 'Compression failed'}
+        </h1>
+        <p className="d">
+          {mode === 'speed' ? 'An error occurred while changing the speed.' : 'An error occurred during compression.'}
+        </p>
       </div>
       <div className="c">
         <div className="k" style={{ marginBottom: '12px' }}>Input file</div>

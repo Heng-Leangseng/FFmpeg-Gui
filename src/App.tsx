@@ -8,9 +8,9 @@ import { Error } from './components/Error';
 import { ffmpegEngine } from './engine/ffmpeg';
 import { ToolSidebar, ToolSidebarTrigger } from './components/ToolSidebar';
 import { ToolOperation } from './config/toolCatalog';
+import type { Operation } from './types';
 
 type Screen = 'select' | 'settings' | 'processing' | 'result' | 'error';
-type Operation = 'compress' | 'speed';
 
 function App() {
   const [screen, setScreen] = useState<Screen>('select');
@@ -33,7 +33,7 @@ function App() {
 
   const handleSelectOperation = useCallback((op: ToolOperation & { category: string; subcategory: string }) => {
     if (isCompressing) {
-      alert('A compression job is running. Cancel it first or wait for it to finish.');
+      alert('A job is running. Cancel it first or wait for it to finish.');
       return;
     }
     if (op.id === 'compress-video') {
@@ -90,6 +90,7 @@ function App() {
   const startSpeedChange = useCallback(async (options: { factor: number }) => {
     if (!file || isCompressing) return;
 
+    setSpeedFactor(options.factor);
     cancelRequestedRef.current = false;
     setIsCompressing(true);
     setProgress(0);
@@ -119,7 +120,6 @@ function App() {
   }, [file, isCompressing]);
 
   const handleSpeedNext = useCallback((factor: number) => {
-    setSpeedFactor(factor);
     setScreen('processing');
     startSpeedChange({ factor });
   }, [startSpeedChange]);
@@ -185,7 +185,7 @@ function App() {
           speedFactor={speedFactor}
         />
       )}
-      {screen === 'error' && <Error onReset={handleReset} />}
+      {screen === 'error' && <Error onReset={handleReset} mode={operation} />}
     </div>
   );
 }

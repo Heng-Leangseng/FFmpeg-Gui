@@ -42,6 +42,7 @@ export const SpeedSettings: React.FC<SpeedSettingsProps> = ({ file, initialFacto
 
   useEffect(() => {
     const video = document.createElement('video');
+    const url = URL.createObjectURL(file);
     video.preload = 'metadata';
     video.onloadedmetadata = () => {
       setMetadata({
@@ -49,12 +50,18 @@ export const SpeedSettings: React.FC<SpeedSettingsProps> = ({ file, initialFacto
         width: video.videoWidth,
         height: video.videoHeight,
       });
-      URL.revokeObjectURL(video.src);
+      URL.revokeObjectURL(url);
     };
     video.onerror = () => {
-      URL.revokeObjectURL(video.src);
+      URL.revokeObjectURL(url);
     };
-    video.src = URL.createObjectURL(file);
+    video.src = url;
+    return () => {
+      video.onloadedmetadata = null;
+      video.onerror = null;
+      video.src = '';
+      URL.revokeObjectURL(url);
+    };
   }, [file]);
 
   return (

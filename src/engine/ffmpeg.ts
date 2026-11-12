@@ -14,6 +14,10 @@ const inputNameFor = (file: File): string => {
 };
 
 export function buildAtempo(factor: number): string {
+  if (!Number.isFinite(factor) || factor <= 0) {
+    throw new Error('Invalid speed factor');
+  }
+
   const filters: string[] = [];
   let remaining = factor;
 
@@ -35,7 +39,6 @@ export class FFmpegEngine {
   private ffmpeg: FFmpeg | null = null;
   private loaded = false;
   private logHandler: ((event: { message: string }) => void) | null = null;
-  private progressHandler: ((event: { progress: number }) => void) | null = null;
 
   async load(onLog?: (message: string) => void): Promise<void> {
     if (this.loaded && this.ffmpeg) return;
@@ -79,16 +82,16 @@ export class FFmpegEngine {
     const data = await fetchFile(inputFile);
     await ffmpeg.writeFile(inputName, data);
 
-    this.progressHandler = (event: { progress: number }) => {
+    const progressHandler = (event: { progress: number }) => {
       const progressValue = Math.max(0, Math.min(1, event.progress));
       if (onProgress) {
         onProgress(progressValue);
       }
     };
-    ffmpeg.on('progress', this.progressHandler);
+    ffmpeg.on('progress', progressHandler);
 
     try {
-      await ffmpeg.exec([
+      const exitCode = await ffmpeg.exec([
         '-hide_banner',
         '-y',
         '-i', inputName,
@@ -96,13 +99,14 @@ export class FFmpegEngine {
         outputName,
       ]);
 
+      if (exitCode !== 0) {
+        throw new Error(`FFmpeg exited with code ${exitCode}`);
+      }
+
       const outputData = await ffmpeg.readFile(outputName);
       return outputData as Uint8Array;
     } finally {
-      if (this.progressHandler) {
-        ffmpeg.off('progress', this.progressHandler);
-        this.progressHandler = null;
-      }
+      ffmpeg.off('progress', progressHandler);
       try {
         await ffmpeg.deleteFile(inputName);
       } catch {
