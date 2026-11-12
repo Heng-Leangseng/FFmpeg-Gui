@@ -9,6 +9,7 @@ import { ffmpegEngine } from './engine/ffmpeg';
 import { ToolSidebar, ToolSidebarTrigger } from './components/ToolSidebar';
 import { ToolOperation } from './config/toolCatalog';
 import type { Operation } from './types';
+import type { LoadProgress } from './engine/ffmpeg';
 
 type Screen = 'select' | 'settings' | 'processing' | 'result' | 'error';
 
@@ -24,6 +25,8 @@ function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [operation, setOperation] = useState<Operation>('compress');
   const [speedFactor, setSpeedFactor] = useState(1);
+  const [stage, setStage] = useState<'loading' | 'processing'>('loading');
+  const [loadProgress, setLoadProgress] = useState<LoadProgress>({ loaded: 0, total: 0, phase: 'download' });
   const cancelRequestedRef = useRef(false);
 
   const handleFileSelect = useCallback((selectedFile: File) => {
@@ -55,11 +58,17 @@ function App() {
     cancelRequestedRef.current = false;
     setIsCompressing(true);
     setProgress(0);
+    setStage('loading');
+    setLoadProgress({ loaded: 0, total: 0, phase: 'download' });
 
     try {
-      await ffmpegEngine.load((msg) => {
-        console.log('[FFmpeg]', msg);
-      });
+      await ffmpegEngine.load(
+        (msg) => {
+          console.log('[FFmpeg]', msg);
+        },
+        (p) => setLoadProgress(p)
+      );
+      setStage('processing');
 
       const result = await ffmpegEngine.compress(
         file,
@@ -94,11 +103,17 @@ function App() {
     cancelRequestedRef.current = false;
     setIsCompressing(true);
     setProgress(0);
+    setStage('loading');
+    setLoadProgress({ loaded: 0, total: 0, phase: 'download' });
 
     try {
-      await ffmpegEngine.load((msg) => {
-        console.log('[FFmpeg]', msg);
-      });
+      await ffmpegEngine.load(
+        (msg) => {
+          console.log('[FFmpeg]', msg);
+        },
+        (p) => setLoadProgress(p)
+      );
+      setStage('processing');
 
       const result = await ffmpegEngine.changeSpeed(
         file,
@@ -174,6 +189,8 @@ function App() {
           onCancel={handleCancel}
           file={file}
           title={operation === 'speed' ? 'Changing speed' : 'Compressing'}
+          stage={stage}
+          loadProgress={loadProgress}
         />
       )}
       {screen === 'result' && file && outputData && (

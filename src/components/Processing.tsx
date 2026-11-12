@@ -1,6 +1,7 @@
 import React from 'react';
 import { formatFileName } from '../utils/formatFileName';
 import { formatSize } from '../utils/formatSize';
+import type { LoadProgress } from '../engine/ffmpeg';
 
 interface ProcessingProps {
   progress: number;
@@ -8,6 +9,8 @@ interface ProcessingProps {
   file?: File | null;
   metadata?: { duration?: number; width?: number; height?: number };
   title?: string;
+  stage: 'loading' | 'processing';
+  loadProgress: LoadProgress;
 }
 
 const LogoIcon = () => (
@@ -28,9 +31,29 @@ const CrossIcon = () => (
   </svg>
 );
 
-export const Processing: React.FC<ProcessingProps> = ({ progress, onCancel, file, metadata, title = 'Compressing' }) => {
-  const clamped = Math.min(1, Math.max(0, progress));
-  const percent = Math.round(clamped * 100);
+export const Processing: React.FC<ProcessingProps> = ({
+  progress,
+  onCancel,
+  file,
+  metadata,
+  title = 'Compressing',
+  stage,
+  loadProgress,
+}) => {
+  const isDownload = stage === 'loading' && loadProgress.phase === 'download';
+  const isStarting = stage === 'loading' && loadProgress.phase === 'starting';
+  const knownTotal = loadProgress.total > 0;
+
+  const ratio = isDownload
+    ? knownTotal
+      ? Math.min(1, loadProgress.loaded / loadProgress.total)
+      : 0
+    : isStarting
+    ? 1
+    : Math.min(1, Math.max(0, progress));
+
+  const label = isDownload ? 'Loading engine' : isStarting ? 'Starting engine' : title;
+  const percentLabel = isDownload && !knownTotal ? null : Math.round(ratio * 100);
 
   return (
     <div className="s">
@@ -50,9 +73,9 @@ export const Processing: React.FC<ProcessingProps> = ({ progress, onCancel, file
         </div>
       </div>
       <div>
-        <div className="k">{title}</div>
-        <div className="m" style={{ fontSize: '88px', fontWeight: 700, lineHeight: 1, color: '#3E92CC', margin: '10px 0 18px', letterSpacing: '-0.04em' }}>
-          {percent}%
+        <div className="k">{label}</div>
+        <div className="processing-percent">
+          {percentLabel === null ? '…' : `${percentLabel}%`}
         </div>
         <div className="progress-bar-container" style={{ width: '100%', position: 'relative', overflow: 'hidden' }}>
           <div
@@ -61,13 +84,19 @@ export const Processing: React.FC<ProcessingProps> = ({ progress, onCancel, file
               left: 0,
               top: 0,
               height: '100%',
-              width: `${clamped * 100}%`,
+              width: `${ratio * 100}%`,
               background: '#3E92CC',
             }}
           />
         </div>
         <div style={{ fontSize: '11px', color: '#B4C8D9', textAlign: 'center', marginTop: '8px' }}>
-          Progress may be approximate
+          {isDownload
+            ? knownTotal
+              ? `${formatSize(loadProgress.loaded)} / ${formatSize(loadProgress.total)}`
+              : `${formatSize(loadProgress.loaded)} downloaded`
+            : isStarting
+            ? 'Preparing video engine'
+            : 'Progress may be approximate'}
         </div>
       </div>
       <div style={{ flex: 1 }}></div>

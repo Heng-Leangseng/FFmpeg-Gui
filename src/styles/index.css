@@ -410,11 +410,22 @@ svg {
 }
 
 .progress-bar-container {
-  height: 28px;
+  height: 10px;
   background: var(--bg-elevated);
   border-radius: 0;
   overflow: hidden;
   display: flex;
+}
+
+.processing-percent {
+  font-size: 48px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--accent);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
+  margin: 10px 0 16px;
 }
 
 .progress-segment {
