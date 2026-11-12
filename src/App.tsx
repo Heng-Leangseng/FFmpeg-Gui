@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { SelectVideo } from './components/SelectVideo';
 import { Settings } from './components/Settings';
 import { Processing } from './components/Processing';
@@ -20,6 +20,7 @@ function App() {
 
   const [isCompressing, setIsCompressing] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const cancelRequestedRef = useRef(false);
 
   const handleFileSelect = useCallback((selectedFile: File) => {
     setFile(selectedFile);
@@ -42,9 +43,10 @@ function App() {
     alert(`${op.name} (${op.status})\nComing soon.`);
   }, [isCompressing, file]);
 
-  const startCompression = useCallback(async () => {
+  const startCompression = useCallback(async (options: { crf: number; preset: string }) => {
     if (!file || isCompressing) return;
 
+    cancelRequestedRef.current = false;
     setIsCompressing(true);
     setProgress(0);
 
@@ -55,35 +57,38 @@ function App() {
 
       const result = await ffmpegEngine.compress(
         file,
-        { crf: Math.round(crf), preset },
+        { crf: Math.round(options.crf), preset: options.preset },
         (p) => setProgress(p)
       );
+
+      if (cancelRequestedRef.current) return;
 
       setOutputData(result);
       setScreen('result');
     } catch (err: unknown) {
+      if (cancelRequestedRef.current) return;
       console.error('[App] Compression error:', err);
       setScreen('error');
     } finally {
       setIsCompressing(false);
     }
-  }, [file, crf, preset, isCompressing]);
+  }, [file, isCompressing]);
 
   const handleSettingsNext = useCallback((selectedCrf: number, selectedPreset: string) => {
     setCrf(selectedCrf);
     setPreset(selectedPreset);
     setScreen('processing');
-    startCompression();
+    startCompression({ crf: selectedCrf, preset: selectedPreset });
   }, [startCompression]);
 
   const handleCancel = useCallback(async () => {
+    cancelRequestedRef.current = true;
     try {
       await ffmpegEngine.cancel();
     } catch (e) {
       // ignore
     }
-    setScreen('select');
-    setFile(null);
+    setScreen('settings');
     setOutputData(null);
     setProgress(0);
     setIsCompressing(false);
@@ -110,7 +115,7 @@ function App() {
       />
       {screen === 'select' && <SelectVideo onFileSelect={handleFileSelect} />}
       {screen === 'settings' && file && (
-        <Settings file={file} onNext={handleSettingsNext} onBack={handleReset} />
+        <Settings file={file} initialCrf={crf} initialPreset={preset} onNext={handleSettingsNext} onBack={handleReset} />
       )}
       {screen === 'processing' && <Processing progress={progress} onCancel={handleCancel} file={file} />}
       {screen === 'result' && file && outputData && (

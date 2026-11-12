@@ -4,6 +4,8 @@ import { formatSize } from '../utils/formatSize';
 
 interface SettingsProps {
   file: File;
+  initialCrf: number;
+  initialPreset: string;
   onNext: (crf: number, preset: string) => void;
   onBack: () => void;
 }
@@ -27,9 +29,9 @@ const formatDuration = (seconds?: number) => {
   return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
 };
 
-export const Settings: React.FC<SettingsProps> = ({ file, onNext, onBack }) => {
-  const [crf, setCrf] = useState(30);
-  const [preset, setPreset] = useState('veryfast');
+export const Settings: React.FC<SettingsProps> = ({ file, initialCrf, initialPreset, onNext, onBack }) => {
+  const [crf, setCrf] = useState(initialCrf);
+  const [preset, setPreset] = useState(initialPreset);
   const [metadata, setMetadata] = useState<{ duration?: number; width?: number; height?: number }>({});
 
   const presets = [
