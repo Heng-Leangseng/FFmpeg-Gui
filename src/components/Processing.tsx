@@ -7,6 +7,7 @@ interface ProcessingProps {
   onCancel: () => void;
   file?: File | null;
   metadata?: { duration?: number; width?: number; height?: number };
+  title?: string;
 }
 
 const LogoIcon = () => (
@@ -27,7 +28,7 @@ const CrossIcon = () => (
   </svg>
 );
 
-export const Processing: React.FC<ProcessingProps> = ({ progress, onCancel, file, metadata }) => {
+export const Processing: React.FC<ProcessingProps> = ({ progress, onCancel, file, metadata, title = 'Compressing' }) => {
   const clamped = Math.min(1, Math.max(0, progress));
   const percent = Math.round(clamped * 100);
 
@@ -49,7 +50,7 @@ export const Processing: React.FC<ProcessingProps> = ({ progress, onCancel, file
         </div>
       </div>
       <div>
-        <div className="k">Compressing</div>
+        <div className="k">{title}</div>
         <div className="m" style={{ fontSize: '88px', fontWeight: 700, lineHeight: 1, color: '#3E92CC', margin: '10px 0 18px', letterSpacing: '-0.04em' }}>
           {percent}%
         </div>

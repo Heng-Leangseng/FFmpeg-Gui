@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { SelectVideo } from './components/SelectVideo';
 import { Settings } from './components/Settings';
+import { SpeedSettings } from './components/SpeedSettings';
 import { Processing } from './components/Processing';
 import { Result } from './components/Result';
 import { Error } from './components/Error';
@@ -9,6 +10,7 @@ import { ToolSidebar, ToolSidebarTrigger } from './components/ToolSidebar';
 import { ToolOperation } from './config/toolCatalog';
 
 type Screen = 'select' | 'settings' | 'processing' | 'result' | 'error';
+type Operation = 'compress' | 'speed';
 
 function App() {
   const [screen, setScreen] = useState<Screen>('select');
@@ -20,6 +22,8 @@ function App() {
 
   const [isCompressing, setIsCompressing] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [operation, setOperation] = useState<Operation>('compress');
+  const [speedFactor, setSpeedFactor] = useState(1);
   const cancelRequestedRef = useRef(false);
 
   const handleFileSelect = useCallback((selectedFile: File) => {
@@ -33,11 +37,13 @@ function App() {
       return;
     }
     if (op.id === 'compress-video') {
-      if (file) {
-        setScreen('settings');
-      } else {
-        setScreen('select');
-      }
+      setOperation('compress');
+      setScreen(file ? 'settings' : 'select');
+      return;
+    }
+    if (op.id === 'change-speed') {
+      setOperation('speed');
+      setScreen(file ? 'settings' : 'select');
       return;
     }
     alert(`${op.name} (${op.status})\nComing soon.`);
@@ -81,6 +87,43 @@ function App() {
     startCompression({ crf: selectedCrf, preset: selectedPreset });
   }, [startCompression]);
 
+  const startSpeedChange = useCallback(async (options: { factor: number }) => {
+    if (!file || isCompressing) return;
+
+    cancelRequestedRef.current = false;
+    setIsCompressing(true);
+    setProgress(0);
+
+    try {
+      await ffmpegEngine.load((msg) => {
+        console.log('[FFmpeg]', msg);
+      });
+
+      const result = await ffmpegEngine.changeSpeed(
+        file,
+        options.factor,
+        (p) => setProgress(p)
+      );
+
+      if (cancelRequestedRef.current) return;
+
+      setOutputData(result);
+      setScreen('result');
+    } catch (err: unknown) {
+      if (cancelRequestedRef.current) return;
+      console.error('[App] Speed change error:', err);
+      setScreen('error');
+    } finally {
+      setIsCompressing(false);
+    }
+  }, [file, isCompressing]);
+
+  const handleSpeedNext = useCallback((factor: number) => {
+    setSpeedFactor(factor);
+    setScreen('processing');
+    startSpeedChange({ factor });
+  }, [startSpeedChange]);
+
   const handleCancel = useCallback(async () => {
     cancelRequestedRef.current = true;
     try {
@@ -113,13 +156,34 @@ function App() {
         onSelectOperation={handleSelectOperation}
         isEncoding={isCompressing}
       />
-      {screen === 'select' && <SelectVideo onFileSelect={handleFileSelect} />}
-      {screen === 'settings' && file && (
+      {screen === 'select' && (
+        <SelectVideo
+          onFileSelect={handleFileSelect}
+          title={operation === 'speed' ? 'Change Speed' : 'Compress Video'}
+        />
+      )}
+      {screen === 'settings' && file && operation === 'compress' && (
         <Settings file={file} initialCrf={crf} initialPreset={preset} onNext={handleSettingsNext} onBack={handleReset} />
       )}
-      {screen === 'processing' && <Processing progress={progress} onCancel={handleCancel} file={file} />}
+      {screen === 'settings' && file && operation === 'speed' && (
+        <SpeedSettings file={file} initialFactor={speedFactor} onNext={handleSpeedNext} onBack={handleReset} />
+      )}
+      {screen === 'processing' && (
+        <Processing
+          progress={progress}
+          onCancel={handleCancel}
+          file={file}
+          title={operation === 'speed' ? 'Changing speed' : 'Compressing'}
+        />
+      )}
       {screen === 'result' && file && outputData && (
-        <Result inputFile={file} outputData={outputData} onReset={handleReset} />
+        <Result
+          inputFile={file}
+          outputData={outputData}
+          onReset={handleReset}
+          mode={operation}
+          speedFactor={speedFactor}
+        />
       )}
       {screen === 'error' && <Error onReset={handleReset} />}
     </div>

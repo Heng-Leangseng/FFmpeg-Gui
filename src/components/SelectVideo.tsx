@@ -2,6 +2,7 @@ import { useState, DragEvent, ChangeEvent } from 'react';
 
 interface SelectVideoProps {
   onFileSelect: (file: File) => void;
+  title?: string;
 }
 
 const LogoIcon = () => (
@@ -22,7 +23,7 @@ const VIDEO_EXTENSION = /\.(mp4|m4v|mov|webm|mkv|avi|ogv|3gp)$/i;
 const isVideoFile = (file: File) =>
   file.type.startsWith('video/') || VIDEO_EXTENSION.test(file.name);
 
-export const SelectVideo: React.FC<SelectVideoProps> = ({ onFileSelect }) => {
+export const SelectVideo: React.FC<SelectVideoProps> = ({ onFileSelect, title = 'Compress Video' }) => {
   const [error, setError] = useState('');
 
   const handleFile = (file: File) => {
@@ -59,7 +60,7 @@ export const SelectVideo: React.FC<SelectVideoProps> = ({ onFileSelect }) => {
         </div>
       </div>
       <div>
-        <h1 className="t" style={{ marginTop: '8px' }}>Compress Video</h1>
+        <h1 className="t" style={{ marginTop: '8px' }}>{title}</h1>
       </div>
       <label className="z" onDragOver={handleDragOver} onDrop={handleDrop}>
         <input

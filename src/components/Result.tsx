@@ -6,6 +6,8 @@ interface ResultProps {
   inputFile: File;
   outputData: Uint8Array;
   onReset: () => void;
+  mode?: 'compress' | 'speed';
+  speedFactor?: number;
 }
 
 const LogoIcon = () => (
@@ -52,7 +54,7 @@ const canSaveViaShare = (() => {
   }
 })();
 
-export const Result: React.FC<ResultProps> = ({ inputFile, outputData, onReset }) => {
+export const Result: React.FC<ResultProps> = ({ inputFile, outputData, onReset, mode = 'compress', speedFactor = 1 }) => {
   const outputBlob = useMemo(() => {
     const bytes = new Uint8Array(outputData.byteLength);
     bytes.set(outputData);
@@ -64,7 +66,10 @@ export const Result: React.FC<ResultProps> = ({ inputFile, outputData, onReset }
   const saved = inputSize - outputSize;
   const savedPercent = inputSize > 0 ? ((saved / inputSize) * 100).toFixed(1) : '0';
   const outputPercent = inputSize > 0 ? ((outputSize / inputSize) * 100).toFixed(1) : '0';
-  const downloadName = `compressed_${inputFile.name.replace(/\.[^/.]+$/, '')}.mp4`;
+  const baseName = inputFile.name.replace(/\.[^/.]+$/, '');
+  const downloadName = mode === 'speed'
+    ? `speed-${speedFactor}x_${baseName}.mp4`
+    : `compressed_${baseName}.mp4`;
 
   useEffect(() => {
     const url = URL.createObjectURL(outputBlob);
@@ -108,7 +113,9 @@ export const Result: React.FC<ResultProps> = ({ inputFile, outputData, onReset }
         </div>
         <div>
           <div className="k">Success</div>
-          <h1 className="t" style={{ fontSize: '28px', marginTop: '4px' }}>Compression complete</h1>
+          <h1 className="t" style={{ fontSize: '28px', marginTop: '4px' }}>
+            {mode === 'speed' ? 'Speed change complete' : 'Compression complete'}
+          </h1>
         </div>
       </div>
       <div className="c">
@@ -121,19 +128,29 @@ export const Result: React.FC<ResultProps> = ({ inputFile, outputData, onReset }
           <div className="result-bar-fill" style={{ width: '100%' }}></div>
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '15px', margin: '18px 0 8px' }}>
-          <span style={{ color: '#B4C8D9' }}>Compressed</span>
+          <span style={{ color: '#B4C8D9' }}>{mode === 'speed' ? 'Output' : 'Compressed'}</span>
           <b className="m">{formatSize(outputSize)}</b>
         </div>
         <div className="result-bar" style={{ width: '100%' }}>
           <div className="result-bar-fill" style={{ width: `${outputPercent}%` }}></div>
         </div>
-        <div className="st" style={{ marginTop: '20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px' }}>
-          <div>
-            <div className="k">Space saved</div>
-            <div style={{ fontSize: '28px' }}><span className="saved-amount">−{formatSize(Math.abs(saved))}</span></div>
+        {mode === 'speed' ? (
+          <div className="st" style={{ marginTop: '20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px' }}>
+            <div>
+              <div className="k">Output speed</div>
+              <div style={{ fontSize: '28px' }}><span className="saved-amount">{speedFactor}x</span></div>
+            </div>
+            <span className="saved-badge">pitch preserved</span>
           </div>
-          <span className="saved-badge">{saved >= 0 ? savedPercent : outputPercent}% {saved >= 0 ? 'smaller' : 'larger'}</span>
-        </div>
+        ) : (
+          <div className="st" style={{ marginTop: '20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px' }}>
+            <div>
+              <div className="k">Space saved</div>
+              <div style={{ fontSize: '28px' }}><span className="saved-amount">−{formatSize(Math.abs(saved))}</span></div>
+            </div>
+            <span className="saved-badge">{saved >= 0 ? savedPercent : outputPercent}% {saved >= 0 ? 'smaller' : 'larger'}</span>
+          </div>
+        )}
       </div>
       <div className="c" style={{ display: 'flex', gap: '14px', alignItems: 'center', padding: '12px' }}>
         <div className="f f-small" style={{ width: '48px', height: '48px' }}><FileIcon /></div>
@@ -153,7 +170,7 @@ export const Result: React.FC<ResultProps> = ({ inputFile, outputData, onReset }
         </div>
       )}
       <button className="b g" onClick={onReset}>
-        <RotateCcwIcon />Compress another video
+        <RotateCcwIcon />{mode === 'speed' ? 'Change another video' : 'Compress another video'}
       </button>
     </div>
   );

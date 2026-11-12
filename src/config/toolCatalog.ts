@@ -37,7 +37,7 @@ export const toolCatalog: ToolCategory[] = [
           { id: 'trim-cut', name: 'Trim / Cut', status: 'planned' },
           { id: 'merge-videos', name: 'Merge Videos', status: 'planned' },
           { id: 'split-video', name: 'Split Video', status: 'planned' },
-          { id: 'change-speed', name: 'Change Speed', status: 'planned' },
+          { id: 'change-speed', name: 'Change Speed', status: 'available' },
           { id: 'change-frame-rate', name: 'Change Frame Rate', status: 'planned' },
         ],
       },

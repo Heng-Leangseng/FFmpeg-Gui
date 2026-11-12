@@ -6,6 +6,31 @@ export interface CompressOptions {
   preset: string;
 }
 
+const VIDEO_EXTENSION = /\.(mp4|m4v|mov|webm|mkv|avi|ogv|3gp)$/i;
+
+const inputNameFor = (file: File): string => {
+  const match = file.name.match(VIDEO_EXTENSION);
+  return `input${match ? match[0].toLowerCase() : '.mp4'}`;
+};
+
+export function buildAtempo(factor: number): string {
+  const filters: string[] = [];
+  let remaining = factor;
+
+  while (remaining > 2) {
+    filters.push('atempo=2');
+    remaining /= 2;
+  }
+
+  while (remaining < 0.5) {
+    filters.push('atempo=0.5');
+    remaining /= 0.5;
+  }
+
+  filters.push(`atempo=${remaining.toFixed(5)}`);
+  return filters.join(',');
+}
+
 export class FFmpegEngine {
   private ffmpeg: FFmpeg | null = null;
   private loaded = false;
@@ -39,35 +64,67 @@ export class FFmpegEngine {
     this.loaded = true;
   }
 
+  private async runJob(
+    inputFile: File,
+    outputName: string,
+    args: string[],
+    onProgress?: (progress: number) => void
+  ): Promise<Uint8Array> {
+    const ffmpeg = this.ffmpeg;
+    if (!ffmpeg || !this.loaded) {
+      throw new Error('FFmpeg not loaded');
+    }
+
+    const inputName = inputNameFor(inputFile);
+    const data = await fetchFile(inputFile);
+    await ffmpeg.writeFile(inputName, data);
+
+    this.progressHandler = (event: { progress: number }) => {
+      const progressValue = Math.max(0, Math.min(1, event.progress));
+      if (onProgress) {
+        onProgress(progressValue);
+      }
+    };
+    ffmpeg.on('progress', this.progressHandler);
+
+    try {
+      await ffmpeg.exec([
+        '-hide_banner',
+        '-y',
+        '-i', inputName,
+        ...args,
+        outputName,
+      ]);
+
+      const outputData = await ffmpeg.readFile(outputName);
+      return outputData as Uint8Array;
+    } finally {
+      if (this.progressHandler) {
+        ffmpeg.off('progress', this.progressHandler);
+        this.progressHandler = null;
+      }
+      try {
+        await ffmpeg.deleteFile(inputName);
+      } catch {
+        // worker may already be terminated after a cancel
+      }
+      try {
+        await ffmpeg.deleteFile(outputName);
+      } catch {
+        // worker may already be terminated after a cancel
+      }
+    }
+  }
+
   async compress(
     inputFile: File,
     options: CompressOptions,
     onProgress?: (progress: number) => void
   ): Promise<Uint8Array> {
-    if (!this.ffmpeg || !this.loaded) {
-      throw new Error('FFmpeg not loaded');
-    }
-
-    const inputName = 'input.mp4';
-    const outputName = 'output.mp4';
-
-    const data = await fetchFile(inputFile);
-    await this.ffmpeg.writeFile(inputName, data);
-
-    let progressValue = 0;
-    this.progressHandler = (event: { progress: number }) => {
-      progressValue = Math.max(0, Math.min(1, event.progress));
-      if (onProgress) {
-        onProgress(progressValue);
-      }
-    };
-    this.ffmpeg.on('progress', this.progressHandler);
-
-    try {
-      await this.ffmpeg.exec([
-        '-hide_banner',
-        '-y',
-        '-i', inputName,
+    return this.runJob(
+      inputFile,
+      'output.mp4',
+      [
         '-c:v', 'libx264',
         '-preset', options.preset,
         '-crf', options.crf.toString(),
@@ -75,17 +132,32 @@ export class FFmpegEngine {
         '-c:a', 'aac',
         '-b:a', '96k',
         '-movflags', '+faststart',
-        outputName
-      ]);
+      ],
+      onProgress
+    );
+  }
 
-      const outputData = await this.ffmpeg.readFile(outputName);
-      return outputData as Uint8Array;
-    } finally {
-      if (this.progressHandler) {
-        this.ffmpeg.off('progress', this.progressHandler);
-        this.progressHandler = null;
-      }
-    }
+  async changeSpeed(
+    inputFile: File,
+    factor: number,
+    onProgress?: (progress: number) => void
+  ): Promise<Uint8Array> {
+    return this.runJob(
+      inputFile,
+      'output.mp4',
+      [
+        '-filter:v', `setpts=PTS/${factor}`,
+        '-filter:a', buildAtempo(factor),
+        '-c:v', 'libx264',
+        '-preset', 'veryfast',
+        '-crf', '23',
+        '-pix_fmt', 'yuv420p',
+        '-c:a', 'aac',
+        '-b:a', '128k',
+        '-movflags', '+faststart',
+      ],
+      onProgress
+    );
   }
 
   async cancel(): Promise<void> {
