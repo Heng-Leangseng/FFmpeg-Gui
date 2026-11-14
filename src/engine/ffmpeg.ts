@@ -3,7 +3,6 @@ import { fetchFile } from '@ffmpeg/util';
 
 export interface CompressOptions {
   crf: number;
-  preset: string;
 }
 
 const VIDEO_EXTENSION = /\.(mp4|m4v|mov|webm|mkv|avi|ogv|3gp)$/i;
@@ -239,7 +238,7 @@ export class FFmpegEngine {
       'output.mp4',
       [
         '-c:v', 'libx264',
-        '-preset', options.preset,
+        '-preset', 'veryfast',
         '-crf', options.crf.toString(),
         '-pix_fmt', 'yuv420p',
         '-c:a', 'aac',

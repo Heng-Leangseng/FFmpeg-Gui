@@ -17,7 +17,6 @@ function App() {
   const [screen, setScreen] = useState<Screen>('select');
   const [file, setFile] = useState<File | null>(null);
   const [crf, setCrf] = useState(30);
-  const [preset, setPreset] = useState('veryfast');
   const [progress, setProgress] = useState(0);
   const [outputData, setOutputData] = useState<Uint8Array | null>(null);
 
@@ -52,7 +51,7 @@ function App() {
     alert(`${op.name} (${op.status})\nComing soon.`);
   }, [isCompressing, file]);
 
-  const startCompression = useCallback(async (options: { crf: number; preset: string }) => {
+  const startCompression = useCallback(async (options: { crf: number }) => {
     if (!file || isCompressing) return;
 
     cancelRequestedRef.current = false;
@@ -72,7 +71,7 @@ function App() {
 
       const result = await ffmpegEngine.compress(
         file,
-        { crf: Math.round(options.crf), preset: options.preset },
+        { crf: Math.round(options.crf) },
         (p) => setProgress(p)
       );
 
@@ -89,11 +88,10 @@ function App() {
     }
   }, [file, isCompressing]);
 
-  const handleSettingsNext = useCallback((selectedCrf: number, selectedPreset: string) => {
+  const handleSettingsNext = useCallback((selectedCrf: number) => {
     setCrf(selectedCrf);
-    setPreset(selectedPreset);
     setScreen('processing');
-    startCompression({ crf: selectedCrf, preset: selectedPreset });
+    startCompression({ crf: selectedCrf });
   }, [startCompression]);
 
   const startSpeedChange = useCallback(async (options: { factor: number }) => {
@@ -178,7 +176,7 @@ function App() {
         />
       )}
       {screen === 'settings' && file && operation === 'compress' && (
-        <Settings file={file} initialCrf={crf} initialPreset={preset} onNext={handleSettingsNext} onBack={handleReset} />
+        <Settings file={file} initialCrf={crf} onNext={handleSettingsNext} onBack={handleReset} />
       )}
       {screen === 'settings' && file && operation === 'speed' && (
         <SpeedSettings file={file} initialFactor={speedFactor} onNext={handleSpeedNext} onBack={handleReset} />
