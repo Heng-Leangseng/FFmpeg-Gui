@@ -1,9 +1,7 @@
 import React from 'react';
-import type { Operation } from '../types';
 
 interface ErrorProps {
   onReset: () => void;
-  mode?: Operation;
 }
 
 const LogoIcon = () => (
@@ -30,7 +28,7 @@ const FileIcon = () => (
   </svg>
 );
 
-export const Error: React.FC<ErrorProps> = ({ onReset, mode = 'compress' }) => {
+export const Error: React.FC<ErrorProps> = ({ onReset }) => {
   return (
     <div className="s">
       <div className="h">
@@ -43,19 +41,15 @@ export const Error: React.FC<ErrorProps> = ({ onReset, mode = 'compress' }) => {
         <div style={{ width: '56px', height: '56px', background: '#F2877A', color: '#0A1622', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none', borderRadius: '0' }}>
           <ErrorIcon />
         </div>
-        <h1 className="t" style={{ fontSize: '28px', marginTop: '18px' }}>
-          {mode === 'speed' ? 'Speed change failed' : 'Compression failed'}
-        </h1>
-        <p className="d">
-          {mode === 'speed' ? 'An error occurred while changing the speed.' : 'An error occurred during compression.'}
-        </p>
+        <h1 className="t" style={{ fontSize: '28px', marginTop: '18px' }}>Conversion failed</h1>
+        <p className="d">An error occurred during conversion.</p>
       </div>
       <div className="c">
         <div className="k" style={{ marginBottom: '12px' }}>Input file</div>
         <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
           <div className="f f-small" style={{ width: '48px', height: '48px' }}><FileIcon /></div>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div className="nm" style={{ fontSize: '16px' }}>your video</div>
+            <div className="nm" style={{ fontSize: '16px' }}>your file</div>
             <div className="m error-text" style={{ fontSize: '12px', marginTop: '4px' }}>processing failed</div>
           </div>
         </div>
@@ -64,7 +58,7 @@ export const Error: React.FC<ErrorProps> = ({ onReset, mode = 'compress' }) => {
       <button className="b" onClick={onReset}>
         <RotateCcwIcon />Try again
       </button>
-      <button className="b g" onClick={onReset}>Choose another video</button>
+      <button className="b g" onClick={onReset}>Choose another file</button>
     </div>
   );
 };

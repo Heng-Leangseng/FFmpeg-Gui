@@ -1,38 +1,13 @@
 import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { fetchFile } from '@ffmpeg/util';
-
-export interface CompressOptions {
-  crf: number;
-}
-
-const VIDEO_EXTENSION = /\.(mp4|m4v|mov|webm|mkv|avi|ogv|3gp)$/i;
+import { formatExt, MEDIA_EXTENSION, type TargetFormat } from '../config/formats';
 
 const inputNameFor = (file: File): string => {
-  const match = file.name.match(VIDEO_EXTENSION);
-  return `input${match ? match[0].toLowerCase() : '.mp4'}`;
+  const match = file.name.match(MEDIA_EXTENSION);
+  if (match) return `input${match[0].toLowerCase()}`;
+  const mimeExt = file.type.split('/')[1]?.replace('jpeg', 'jpg');
+  return mimeExt && MEDIA_EXTENSION.test(`.${mimeExt}`) ? `input.${mimeExt}` : 'input.mp4';
 };
-
-export function buildAtempo(factor: number): string {
-  if (!Number.isFinite(factor) || factor <= 0) {
-    throw new Error('Invalid speed factor');
-  }
-
-  const filters: string[] = [];
-  let remaining = factor;
-
-  while (remaining > 2) {
-    filters.push('atempo=2');
-    remaining /= 2;
-  }
-
-  while (remaining < 0.5) {
-    filters.push('atempo=0.5');
-    remaining /= 0.5;
-  }
-
-  filters.push(`atempo=${remaining.toFixed(5)}`);
-  return filters.join(',');
-}
 
 export interface LoadProgress {
   loaded: number;
@@ -228,46 +203,44 @@ export class FFmpegEngine {
     }
   }
 
-  async compress(
-    inputFile: File,
-    options: CompressOptions,
-    onProgress?: (progress: number) => void
-  ): Promise<Uint8Array> {
-    return this.runJob(
-      inputFile,
-      'output.mp4',
-      [
-        '-c:v', 'libx264',
-        '-preset', 'veryfast',
-        '-crf', options.crf.toString(),
-        '-pix_fmt', 'yuv420p',
-        '-c:a', 'aac',
-        '-b:a', '96k',
-        '-movflags', '+faststart',
-      ],
-      onProgress
-    );
+  private argsFor(format: TargetFormat): string[] {
+    switch (format) {
+      case 'webm':
+        return [
+          '-c:v', 'libvpx',
+          '-b:v', '1M',
+          '-deadline', 'realtime',
+          '-cpu-used', '4',
+          '-c:a', 'libopus',
+          '-b:a', '96k',
+        ];
+      case 'mp3':
+        return ['-vn', '-c:a', 'libmp3lame', '-b:a', '128k'];
+      case 'wav':
+        return ['-vn', '-c:a', 'pcm_s16le'];
+      case 'mp4':
+      default:
+        return [
+          '-c:v', 'libx264',
+          '-preset', 'veryfast',
+          '-crf', '28',
+          '-pix_fmt', 'yuv420p',
+          '-c:a', 'aac',
+          '-b:a', '128k',
+          '-movflags', '+faststart',
+        ];
+    }
   }
 
-  async changeSpeed(
+  async convert(
     inputFile: File,
-    factor: number,
+    format: TargetFormat,
     onProgress?: (progress: number) => void
   ): Promise<Uint8Array> {
     return this.runJob(
       inputFile,
-      'output.mp4',
-      [
-        '-filter:v', `setpts=PTS/${factor}`,
-        '-filter:a', buildAtempo(factor),
-        '-c:v', 'libx264',
-        '-preset', 'veryfast',
-        '-crf', '23',
-        '-pix_fmt', 'yuv420p',
-        '-c:a', 'aac',
-        '-b:a', '128k',
-        '-movflags', '+faststart',
-      ],
+      `output.${formatExt(format)}`,
+      this.argsFor(format),
       onProgress
     );
   }

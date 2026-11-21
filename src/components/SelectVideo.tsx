@@ -1,4 +1,5 @@
 import { useState, DragEvent, ChangeEvent } from 'react';
+import { isSupportedMedia } from '../config/formats';
 
 interface SelectVideoProps {
   onFileSelect: (file: File) => void;
@@ -18,20 +19,15 @@ const FileDropIcon = () => (
   </svg>
 );
 
-const VIDEO_EXTENSION = /\.(mp4|m4v|mov|webm|mkv|avi|ogv|3gp)$/i;
-
-const isVideoFile = (file: File) =>
-  file.type.startsWith('video/') || VIDEO_EXTENSION.test(file.name);
-
-export const SelectVideo: React.FC<SelectVideoProps> = ({ onFileSelect, title = 'Compress Video' }) => {
+export const SelectVideo: React.FC<SelectVideoProps> = ({ onFileSelect, title = 'Convert Media' }) => {
   const [error, setError] = useState('');
 
   const handleFile = (file: File) => {
-    if (isVideoFile(file)) {
+    if (isSupportedMedia(file)) {
       setError('');
       onFileSelect(file);
     } else {
-      setError('That file is not a video. Choose an MP4, MOV, WebM, or similar.');
+      setError('Choose a supported video, audio, or image file.');
     }
   };
 
@@ -66,14 +62,14 @@ export const SelectVideo: React.FC<SelectVideoProps> = ({ onFileSelect, title = 
         <input
           type="file"
           className="z-input"
-          accept="video/*,.mp4,.m4v,.mov,.webm,.mkv,.avi"
+          accept=".mp4,.m4v,.mov,.webm,.mkv,.avi,.ogv,.3gp,.mp3,.m4a,.aac,.wav,.flac,.ogg,.opus,.png,.jpg,.jpeg,.webp,.gif"
           onChange={handleChange}
-          aria-label="Choose a video file"
+          aria-label="Choose a media file"
         />
         <span style={{ width: '72px', height: '72px', background: '#18435A', color: '#3E92CC', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '0' }}>
           <FileDropIcon />
         </span>
-        <span style={{ fontSize: '22px', fontWeight: 700 }}>Choose a video</span>
+        <span style={{ fontSize: '22px', fontWeight: 700 }}>Choose a file</span>
         <span style={{ background: '#2A628F', color: '#fff', padding: '12px 22px', fontSize: '15px', fontWeight: 600, borderRadius: '0' }}>Browse files</span>
       </label>
       {error && (

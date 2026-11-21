@@ -36,7 +36,7 @@ export const Processing: React.FC<ProcessingProps> = ({
   onCancel,
   file,
   metadata,
-  title = 'Compressing',
+  title = 'Converting',
   stage,
   loadProgress,
 }) => {

@@ -1,14 +1,13 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { formatFileName } from '../utils/formatFileName';
 import { formatSize } from '../utils/formatSize';
-import type { Operation } from '../types';
+import { formatExt, formatMime, type TargetFormat } from '../config/formats';
 
 interface ResultProps {
   inputFile: File;
   outputData: Uint8Array;
+  format: TargetFormat;
   onReset: () => void;
-  mode?: Operation;
-  speedFactor?: number;
 }
 
 const LogoIcon = () => (
@@ -46,31 +45,29 @@ const isIOS =
   (/iPad|iPhone|iPod/.test(navigator.userAgent) ||
     (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1));
 
-const canSaveViaShare = (() => {
-  if (!isIOS || !navigator.canShare) return false;
-  try {
-    return navigator.canShare({ files: [new File([], 'video.mp4', { type: 'video/mp4' })] });
-  } catch {
-    return false;
-  }
-})();
+export const Result: React.FC<ResultProps> = ({ inputFile, outputData, format, onReset }) => {
+  const mime = formatMime(format);
+  const ext = formatExt(format);
 
-export const Result: React.FC<ResultProps> = ({ inputFile, outputData, onReset, mode = 'compress', speedFactor = 1 }) => {
   const outputBlob = useMemo(() => {
     const bytes = new Uint8Array(outputData.byteLength);
     bytes.set(outputData);
-    return new Blob([bytes.buffer], { type: 'video/mp4' });
-  }, [outputData]);
+    return new Blob([bytes.buffer], { type: mime });
+  }, [outputData, mime]);
+
+  const canSaveViaShare = useMemo(() => {
+    if (!isIOS || !navigator.canShare) return false;
+    try {
+      return navigator.canShare({ files: [new File([], `output.${ext}`, { type: mime })] });
+    } catch {
+      return false;
+    }
+  }, [ext, mime]);
+
   const [previewUrl, setPreviewUrl] = useState('');
   const outputSize = outputData.byteLength;
-  const inputSize = inputFile.size;
-  const saved = inputSize - outputSize;
-  const savedPercent = inputSize > 0 ? ((saved / inputSize) * 100).toFixed(1) : '0';
-  const outputPercent = inputSize > 0 ? ((outputSize / inputSize) * 100).toFixed(1) : '0';
   const baseName = inputFile.name.replace(/\.[^/.]+$/, '');
-  const downloadName = mode === 'speed'
-    ? `speed-${speedFactor}x_${baseName}.mp4`
-    : `compressed_${baseName}.mp4`;
+  const downloadName = `converted_${baseName}.${ext}`;
 
   useEffect(() => {
     const url = URL.createObjectURL(outputBlob);
@@ -79,7 +76,7 @@ export const Result: React.FC<ResultProps> = ({ inputFile, outputData, onReset, 
   }, [outputBlob]);
 
   const handleDownload = async () => {
-    const file = new File([outputBlob], downloadName, { type: 'video/mp4' });
+    const file = new File([outputBlob], downloadName, { type: mime });
     if (canSaveViaShare) {
       try {
         await navigator.share({ files: [file], title: downloadName });
@@ -100,6 +97,14 @@ export const Result: React.FC<ResultProps> = ({ inputFile, outputData, onReset, 
     }, 60_000);
   };
 
+  const preview = mime.startsWith('image/') ? (
+    <img className="video-preview" src={previewUrl} alt="Converted output" />
+  ) : mime.startsWith('audio/') ? (
+    <audio className="video-preview" src={previewUrl} controls />
+  ) : (
+    <video className="video-preview" src={previewUrl} controls playsInline />
+  );
+
   return (
     <div className="s">
       <div className="h">
@@ -114,53 +119,41 @@ export const Result: React.FC<ResultProps> = ({ inputFile, outputData, onReset, 
         </div>
         <div>
           <div className="k">Success</div>
-          <h1 className="t" style={{ fontSize: '28px', marginTop: '4px' }}>
-            {mode === 'speed' ? 'Speed change complete' : 'Compression complete'}
-          </h1>
+          <h1 className="t" style={{ fontSize: '28px', marginTop: '4px' }}>Conversion complete</h1>
         </div>
       </div>
       <div className="c">
         <div className="k" style={{ marginBottom: '14px' }}>Result</div>
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '15px', marginBottom: '8px' }}>
           <span style={{ color: '#B4C8D9' }}>Original</span>
-          <b className="m">{formatSize(inputSize)}</b>
+          <b className="m">{formatSize(inputFile.size)}</b>
         </div>
         <div className="result-bar" style={{ width: '100%' }}>
           <div className="result-bar-fill" style={{ width: '100%' }}></div>
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '15px', margin: '18px 0 8px' }}>
-          <span style={{ color: '#B4C8D9' }}>{mode === 'speed' ? 'Output' : 'Compressed'}</span>
+          <span style={{ color: '#B4C8D9' }}>Output</span>
           <b className="m">{formatSize(outputSize)}</b>
         </div>
         <div className="result-bar" style={{ width: '100%' }}>
-          <div className="result-bar-fill" style={{ width: `${outputPercent}%` }}></div>
+          <div className="result-bar-fill" style={{ width: `${inputFile.size > 0 ? Math.min(100, (outputSize / inputFile.size) * 100) : 100}%` }}></div>
         </div>
-        {mode === 'speed' ? (
-          <div className="st" style={{ marginTop: '20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px' }}>
-            <div>
-              <div className="k">Output speed</div>
-              <div style={{ fontSize: '28px' }}><span className="saved-amount">{speedFactor}x</span></div>
-            </div>
-            <span className="saved-badge">pitch preserved</span>
+        <div className="st" style={{ marginTop: '20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px' }}>
+          <div>
+            <div className="k">Output format</div>
+            <div style={{ fontSize: '28px' }}><span className="saved-amount">{ext.toUpperCase()}</span></div>
           </div>
-        ) : (
-          <div className="st" style={{ marginTop: '20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px' }}>
-            <div>
-              <div className="k">Space saved</div>
-              <div style={{ fontSize: '28px' }}><span className="saved-amount">−{formatSize(Math.abs(saved))}</span></div>
-            </div>
-            <span className="saved-badge">{saved >= 0 ? savedPercent : outputPercent}% {saved >= 0 ? 'smaller' : 'larger'}</span>
-          </div>
-        )}
+          <span className="saved-badge">{mime}</span>
+        </div>
       </div>
       <div className="c" style={{ display: 'flex', gap: '14px', alignItems: 'center', padding: '12px' }}>
         <div className="f f-small" style={{ width: '48px', height: '48px' }}><FileIcon /></div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div className="nm" style={{ fontSize: '16px' }} title={inputFile.name}>{formatFileName(inputFile.name)}</div>
-          <div className="m" style={{ fontSize: '12px', color: '#B4C8D9', marginTop: '4px' }}>{formatSize(outputSize)} · MP4</div>
+          <div className="m" style={{ fontSize: '12px', color: '#B4C8D9', marginTop: '4px' }}>{formatSize(outputSize)} · {ext.toUpperCase()}</div>
         </div>
       </div>
-      <video className="video-preview" src={previewUrl} controls playsInline />
+      {preview}
       <div style={{ flex: 1 }}></div>
       <button className="b" onClick={handleDownload} style={{ marginBottom: canSaveViaShare ? '4px' : '8px' }}>
         <DownloadIcon />Download
@@ -171,7 +164,7 @@ export const Result: React.FC<ResultProps> = ({ inputFile, outputData, onReset, 
         </div>
       )}
       <button className="b g" onClick={onReset}>
-        <RotateCcwIcon />{mode === 'speed' ? 'Change another video' : 'Compress another video'}
+        <RotateCcwIcon />Convert another file
       </button>
     </div>
   );
