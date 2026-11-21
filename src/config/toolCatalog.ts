@@ -34,9 +34,6 @@ export const toolCatalog: ToolCategory[] = [
         id: 'video-editing',
         name: 'Editing',
         operations: [
-          { id: 'trim-cut', name: 'Trim / Cut', status: 'planned' },
-          { id: 'merge-videos', name: 'Merge Videos', status: 'planned' },
-          { id: 'split-video', name: 'Split Video', status: 'planned' },
           { id: 'change-speed', name: 'Change Speed', status: 'available' },
           { id: 'change-frame-rate', name: 'Change Frame Rate', status: 'planned' },
         ],
@@ -76,11 +73,8 @@ export const toolCatalog: ToolCategory[] = [
         id: 'audio-editing',
         name: 'Editing',
         operations: [
-          { id: 'trim-audio', name: 'Trim Audio', status: 'planned' },
-          { id: 'merge-audio', name: 'Merge Audio', status: 'planned' },
           { id: 'adjust-volume', name: 'Adjust Volume', status: 'planned' },
           { id: 'mute-audio', name: 'Mute Audio', status: 'planned' },
-          { id: 'fade-in-out', name: 'Fade In / Out', status: 'planned' },
         ],
       },
       {
@@ -104,15 +98,6 @@ export const toolCatalog: ToolCategory[] = [
         ],
       },
       {
-        id: 'subs-editing',
-        name: 'Editing',
-        operations: [
-          { id: 'add-subtitles', name: 'Add Subtitles', status: 'planned' },
-          { id: 'burn-subtitles', name: 'Burn Subtitles', status: 'planned' },
-          { id: 'synchronize-subtitles', name: 'Synchronize Subtitles', status: 'planned' },
-        ],
-      },
-      {
         id: 'subs-format',
         name: 'Format & Conversion',
         operations: [
@@ -126,19 +111,9 @@ export const toolCatalog: ToolCategory[] = [
     name: 'Images & Animation',
     subcategories: [
       {
-        id: 'frame-operations',
-        name: 'Frame Operations',
-        operations: [
-          { id: 'extract-frames', name: 'Extract Frames', status: 'planned' },
-          { id: 'create-image-sequence', name: 'Create Image Sequence', status: 'planned' },
-        ],
-      },
-      {
         id: 'img-conversion',
         name: 'Conversion',
         operations: [
-          { id: 'video-to-gif', name: 'Video to GIF', status: 'planned' },
-          { id: 'image-sequence-to-video', name: 'Image Sequence to Video', status: 'planned' },
           { id: 'convert-images', name: 'Convert Images', status: 'planned' },
         ],
       },
@@ -152,7 +127,6 @@ export const toolCatalog: ToolCategory[] = [
         id: 'stream-management',
         name: 'Stream Management',
         operations: [
-          { id: 'add-remove-tracks', name: 'Add / Remove Tracks', status: 'planned' },
           { id: 'remux-media', name: 'Remux Media', status: 'planned' },
           { id: 'extract-attachments', name: 'Extract Attachments', status: 'planned' },
         ],
@@ -162,7 +136,6 @@ export const toolCatalog: ToolCategory[] = [
         name: 'Metadata',
         operations: [
           { id: 'edit-metadata', name: 'Edit Metadata', status: 'planned' },
-          { id: 'edit-chapters', name: 'Edit Chapters', status: 'planned' },
           { id: 'inspect-media', name: 'Inspect Media', status: 'planned' },
         ],
       },
